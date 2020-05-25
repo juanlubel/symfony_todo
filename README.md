@@ -5,11 +5,11 @@
 An api-rest server to provide Tasks and Boards
 
 v1.0
-Taks Model
-Task Crud
+* Taks Model
+* Task Crud
 
-Board Model
-Board Create & List
+* Board Model
+* Board Create & List
 
-JSON reponse
+* JSON reponse
 
