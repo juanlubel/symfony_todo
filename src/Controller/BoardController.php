@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Board;
+use App\Normalizers\Normalizer;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,15 +31,12 @@ class BoardController extends AbstractController
     private $serializer;
 
     public function __construct(
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        Normalizer $taskNormalizer
     )
     {
         $this->em = $entityManager;
-        $classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
-        $this->serializer = new Serializer(
-            [new ObjectNormalizer($classMetadataFactory)],
-            [new JsonEncoder()]
-        );
+        $this->serializer = $taskNormalizer;
     }
 
     /**
@@ -60,7 +58,7 @@ class BoardController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(
-            ["task" => $this->serializer->normalize($board, 'json', ['groups' => ['Board']])],
+            ["task" => $this->serializer->normalize($data)],
             Response::HTTP_CREATED
         );
     }
@@ -74,82 +72,83 @@ class BoardController extends AbstractController
     {
         $data = $this->em->getRepository(Board::class)->findAll();
         return new JsonResponse(
-            ["tasks" => $this->serializer->normalize($data, 'json', ['groups' => ['Board']])],
+            ["tasks" => $this->serializer->normalize($data)],
             Response::HTTP_OK
         );
     }
 
     /**
-     * @Route("/task/{id}", name="show_one", methods={"GET"})
+     * @Route("/board/{id}", name="board_show_one", methods={"GET"})
      * @param string $id
      * @return JsonResponse
      * @throws ExceptionInterface
      */
-//    public function fetch(string $id)
-//    {
-//        $data = $this->em->getRepository(Task::class)->find($id);
-//
-//        if (!$data) {
-//            throw $this->createNotFoundException(
-//                'No task found for id '.$id
-//            );
-//        }
-//        return new JsonResponse(
-//            ["task" => $this->serializer->normalize($data, 'json')],
-//            Response::HTTP_OK
-//        );
-//    }
+    public function fetch(string $id)
+    {
+        $data = $this->em->getRepository(Board::class)->find($id);
+
+        if (!$data) {
+            throw $this->createNotFoundException(
+                'No board found for id '.$id
+            );
+        }
+        return new JsonResponse(
+            ["board" => $this->serializer->normalize($data)],
+            Response::HTTP_OK
+        );
+    }
 
     /**
-     * @Route("/task/{id}", name="update", methods={"PUT"})
+     * @Route("/board/{id}", name="board_update", methods={"PUT"})
      * @param Request $request
      * @param string $id
      * @return JsonResponse
      * @throws ExceptionInterface
      */
-//    public function update(Request $request, string $id)
-//    {
-//        /**
-//         * @var Task
-//         */
-//        $data = $this->em->getRepository(Task::class)->find($id);
-//        $taskValues = json_decode($request->getContent(), true);
-//        if (!$data) {
-//            throw $this->createNotFoundException(
-//                'No task found for id '.$id
-//            );
-//        }
-//        $data->setTitle($taskValues['title']);
-//        $data->setDescription($taskValues['description']);
-//        $this->em->flush();
-//        return new JsonResponse(
-//            ["task" => $this->serializer->normalize($data, 'json')],
-//            Response::HTTP_OK
-//        );
-//    }
+    public function update(Request $request, string $id)
+    {
+        /**
+         * @var Board
+         */
+        $data = $this->em->getRepository(Board::class)->find($id);
+        $boardValues = json_decode($request->getContent(), true);
+        if (!$data) {
+            throw $this->createNotFoundException(
+                'No board found for id '.$id
+            );
+        }
+        $data->setTitle($boardValues['title']);
+        $data->setCategory($boardValues['category']);
+        $this->em->flush();
+        return new JsonResponse(
+            ["board" => $this->serializer->normalize($data)],
+            Response::HTTP_OK
+        );
+    }
 
     /**
-     * @Route("/task/{id}", name="remove", methods={"DELETE"})
+     * @Route("/board/{id}", name="board_remove", methods={"DELETE"})
      * @param $id
      * @return JsonResponse
+     * @throws ExceptionInterface
      */
 
-//    public function detele($id)
-//    {
-//        /**
-//         * @var Task
-//         */
-//        $data = $this->em->getRepository(Task::class)->find($id);
-//        if (!$data) {
-//            throw $this->createNotFoundException(
-//                'No task found for id '.$id
-//            );
-//        }
-//        $this->em->remove($data);
-//        $this->em->flush();
-//        return new JsonResponse(
-//            ["task" => $this->serializer->normalize($data, 'json')],
-//            Response::HTTP_OK
-//        );
-//    }
+    public function detele($id)
+    {
+        /**
+         * @var Board
+         */
+        $data = $this->em->getRepository(Board::class)->find($id);
+        if (!$data) {
+            throw $this->createNotFoundException(
+                'No board found for id '.$id
+            );
+        }
+        $this->em->remove($data);
+        $this->em->flush();
+        return new JsonResponse(
+            ["board" => $this->serializer->normalize($data)],
+            Response::HTTP_OK
+        );
+    }
 }

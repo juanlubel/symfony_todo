@@ -34,7 +34,7 @@ class Board
     private $category;
 
     /**
-     * @ORM\OneToMany(targetEntity=Task::class, mappedBy="board")
+     * @ORM\OneToMany(targetEntity=Task::class, mappedBy="board", cascade={"remove"})
      * @Groups({"Board"})
      */
     private $tasks;

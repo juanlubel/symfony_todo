@@ -1,15 +1,16 @@
-# TODO LIST SERVER
+# TO-DO LIST SERVER
 
 ## Symfony 5.0
 
 An api-rest server to provide Tasks and Boards
 
 v1.0
-* Taks Model
+* Task Model
 * Task Crud
 
 * Board Model
-* Board Create & List
+* Board Crud
 
 * JSON reponse
+* Serialize items whit Group annotations
 

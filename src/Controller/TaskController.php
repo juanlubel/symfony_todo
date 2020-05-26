@@ -4,18 +4,14 @@ namespace App\Controller;
 
 use App\Entity\Board;
 use App\Entity\Task;
-use Doctrine\Common\Annotations\AnnotationReader;
+use App\Normalizers\Normalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
-use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
-use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 class TaskController extends AbstractController
@@ -31,19 +27,16 @@ class TaskController extends AbstractController
     private $serializer;
 
     public function __construct(
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        Normalizer $taskNormalizer
     )
     {
         $this->em = $entityManager;
-        $classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
-        $this->serializer = new Serializer(
-            [new ObjectNormalizer($classMetadataFactory)],
-            [new JsonEncoder()]
-        );
+        $this->serializer = $taskNormalizer;
     }
 
     /**
-     * @Route("/task/{id}", name="create", methods={"POST"})
+     * @Route("/task/{id}", name="task_create", methods={"POST"})
      * @param Request $request
      * @param string $id
      * @return JsonResponse
@@ -64,13 +57,13 @@ class TaskController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(
-            ["task" => $this->serializer->normalize($task, 'json'), ['groups'=>['Task']]],
+            ["task" => $this->serializer->normalize($task)],
             Response::HTTP_CREATED
         );
     }
 
     /**
-     * @Route("/tasks", name="show_all", methods={"GET"})
+     * @Route("/tasks", name="task_show_all", methods={"GET"})
      * @return JsonResponse
      * @throws ExceptionInterface
      */
@@ -78,13 +71,13 @@ class TaskController extends AbstractController
     {
         $data = $this->em->getRepository(Task::class)->findAll();
         return new JsonResponse(
-            ["tasks" => $this->serializer->normalize($data, 'json', ['groups'=>['Task']])],
+            ["tasks" => $this->serializer->normalize($data)],
             Response::HTTP_OK
         );
     }
 
     /**
-     * @Route("/task/{id}", name="show_one", methods={"GET"})
+     * @Route("/task/{id}", name="task_show_one", methods={"GET"})
      * @param string $id
      * @return JsonResponse
      * @throws ExceptionInterface
@@ -99,13 +92,13 @@ class TaskController extends AbstractController
             );
         }
         return new JsonResponse(
-            ["task" => $this->serializer->normalize($data, 'json'), ['groups'=>['Task']]],
+            ["task" => $this->serializer->normalize($data)],
             Response::HTTP_OK
         );
     }
 
     /**
-     * @Route("/task/{id}", name="update", methods={"PUT"})
+     * @Route("/task/{id}", name="task_update", methods={"PUT"})
      * @param Request $request
      * @param string $id
      * @return JsonResponse
@@ -127,15 +120,16 @@ class TaskController extends AbstractController
         $data->setDescription($taskValues['description']);
         $this->em->flush();
         return new JsonResponse(
-            ["task" => $this->serializer->normalize($data, 'json'), ['groups'=>['Task']]],
+            ["task" => $this->serializer->normalize($data)],
             Response::HTTP_OK
         );
     }
 
     /**
-     * @Route("/task/{id}", name="remove", methods={"DELETE"})
+     * @Route("/task/{id}", name="task_remove", methods={"DELETE"})
      * @param $id
      * @return JsonResponse
+     * @throws ExceptionInterface
      */
 
     public function detele($id)
@@ -152,7 +146,7 @@ class TaskController extends AbstractController
         $this->em->remove($data);
         $this->em->flush();
         return new JsonResponse(
-            ["task" => $this->serializer->normalize($data, 'json'), ['groups'=>['Task']]],
+            ["task" => $this->serializer->normalize($data)],
             Response::HTTP_OK
         );
     }
